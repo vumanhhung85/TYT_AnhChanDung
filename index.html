@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Tải ảnh làm thẻ - TYT Phường Linh Xuân</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --teal-900:#0b3d3a;
+    --teal-700:#0f5e59;
+    --teal-600:#137a72;
+    --teal-500:#17968c;
+    --mint-100:#e6f4f1;
+    --mint-200:#cdeae4;
+    --paper:#f6f8f7;
+    --card:#ffffff;
+    --ink:#12201e;
+    --ink-soft:#5b6f6b;
+    --line:#dbe6e3;
+    --amber:#c8811a;
+    --red:#c0392b;
+    --shadow: 0 8px 24px rgba(11,61,58,0.10);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  input, button, select{font-family:inherit; font-size:16px;}
+
+  /* ===== Header dạng thẻ đeo ===== */
+  .badge-header{
+    background:linear-gradient(160deg, var(--teal-900), var(--teal-600));
+    color:#fff;
+    padding:28px 20px 34px;
+    position:relative;
+    overflow:hidden;
+  }
+  .badge-header::after{
+    content:"";
+    position:absolute; right:-40px; top:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background:rgba(255,255,255,0.06);
+  }
+  .badge-eyebrow{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    opacity:.75; font-weight:600; margin:0 0 6px;
+  }
+  .badge-title{
+    font-size:21px; font-weight:800; margin:0 0 4px; line-height:1.3;
+  }
+  .badge-sub{
+    font-size:13.5px; opacity:.85; margin:0; font-weight:400;
+  }
+  .badge-hole{
+    position:absolute; top:14px; right:20px;
+    width:34px; height:10px; border-radius:6px;
+    background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.3);
+  }
+
+  /* ===== Stepper ===== */
+  .stepper{
+    display:flex; align-items:center; justify-content:center;
+    gap:6px; margin-top:18px;
+  }
+  .step-dot{
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.75);
+    border:1.5px solid rgba(255,255,255,0.35);
+    flex-shrink:0;
+  }
+  .step-dot.active{ background:#fff; color:var(--teal-700); border-color:#fff; }
+  .step-dot.done{ background:rgba(255,255,255,0.9); color:var(--teal-700); border-color:#fff; }
+  .step-line{ width:26px; height:2px; background:rgba(255,255,255,0.28); }
+  .step-line.done{ background:#fff; }
+
+  /* ===== Khung đếm nhanh (mini stat) ===== */
+  .mini-stat{
+    display:flex; justify-content:center; gap:10px;
+    margin-top:14px;
+  }
+  .mini-stat .pill{
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.28);
+    border-radius:999px; padding:6px 14px; font-size:12.5px; font-weight:700; color:#fff;
+    display:flex; align-items:center; gap:6px;
+  }
+  .mini-stat .pill .dot{ width:7px; height:7px; border-radius:50%; }
+  .mini-stat .pill.up .dot{ background:#8be0d1; }
+  .mini-stat .pill.left .dot{ background:#f3b969; }
+
+  /* ===== Layout ===== */
+  .wrap{ max-width:520px; margin:0 auto; padding:0 16px; }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    margin-top:-20px;
+    position:relative;
+  }
+  .section-title{
+    font-size:17px; font-weight:700; margin:0 0 4px;
+  }
+  .section-hint{
+    font-size:13.5px; color:var(--ink-soft); margin:0 0 16px;
+  }
+
+  /* ===== Search ===== */
+  .search-box{
+    display:flex; align-items:center; gap:8px;
+    background:var(--mint-100); border:1px solid var(--mint-200);
+    border-radius:12px; padding:10px 12px; margin-bottom:14px;
+  }
+  .search-box input{
+    border:none; background:transparent; outline:none; width:100%;
+    color:var(--ink); font-size:15px;
+  }
+  .search-box svg{ flex-shrink:0; opacity:.55; }
+
+  /* ===== List buttons (khoa / nguoi) ===== */
+  .opt-list{ display:flex; flex-direction:column; gap:8px; }
+  .opt-btn{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    width:100%; text-align:left;
+    border:1.5px solid var(--line); background:#fff;
+    border-radius:14px; padding:13px 14px;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .opt-btn:active{ transform:scale(.99); }
+  .opt-btn.highlight{ border-color:var(--teal-500); background:var(--mint-100); }
+  .opt-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .opt-name{ font-weight:600; font-size:15.5px; }
+  .opt-sub{ font-size:12.5px; color:var(--ink-soft); }
+  .opt-badge{
+    flex-shrink:0; font-size:11.5px; font-weight:700; padding:4px 9px;
+    border-radius:999px; white-space:nowrap;
+  }
+  .opt-badge.pending{ background:#fdecea; color:var(--red); }
+  .opt-badge.uploaded{ background:var(--mint-200); color:var(--teal-700); }
+  .opt-count{ font-size:12.5px; color:var(--teal-700); font-weight:700; }
+  .opt-arrow{ opacity:.35; flex-shrink:0; }
+
+  .back-row{
+    display:flex; align-items:center; gap:8px; margin-bottom:14px;
+    color:var(--teal-700); font-weight:600; font-size:14px; cursor:pointer;
+    width:fit-content;
+  }
+
+  /* ===== Ảnh ===== */
+  .photo-zone{
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    padding:8px 0 4px;
+  }
+  .photo-frame{
+    width:150px; height:190px; border-radius:14px;
+    border:2.5px dashed var(--line);
+    background:var(--mint-100);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; position:relative;
+  }
+  .photo-frame img{ width:100%; height:100%; object-fit:cover; }
+  .photo-frame .ph-icon{ opacity:.4; }
+  .photo-actions{ display:flex; gap:10px; width:100%; }
+  .btn{
+    flex:1; border:none; border-radius:12px; padding:13px 16px;
+    font-weight:700; font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-primary{ background:var(--teal-700); color:#fff; }
+  .btn-primary:disabled{ background:#a9c4c1; cursor:not-allowed; }
+  .btn-secondary{ background:var(--mint-100); color:var(--teal-700); border:1.5px solid var(--mint-200); }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); font-weight:600; }
+  .btn-block{ width:100%; }
+  input[type=file]{ display:none; }
+
+  .selected-person{
+    background:var(--mint-100); border:1px solid var(--mint-200);
+    border-radius:14px; padding:12px 14px; margin-bottom:16px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .selected-person .nm{ font-weight:700; font-size:15px; }
+  .selected-person .kh{ font-size:12.5px; color:var(--ink-soft); }
+  .change-link{ font-size:12.5px; color:var(--teal-700); font-weight:700; cursor:pointer; flex-shrink:0; }
+
+  .warn-box{
+    background:#fff7e6; border:1px solid #f3d99a; color:#8a5a00;
+    font-size:13px; border-radius:10px; padding:10px 12px; margin-top:12px;
+  }
+
+  /* ===== Success ===== */
+  .success-wrap{ text-align:center; padding:6px 0; }
+  .success-icon{
+    width:64px; height:64px; border-radius:50%; background:var(--mint-200);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+  }
+  .success-wrap h3{ margin:0 0 6px; font-size:18px; }
+  .success-wrap p{ margin:0 0 18px; color:var(--ink-soft); font-size:14px; }
+  .mini-badge{
+    width:150px; margin:0 auto 20px; border-radius:14px; overflow:hidden;
+    border:1.5px solid var(--line); box-shadow:var(--shadow); background:#fff;
+  }
+  .mini-badge img{ width:100%; height:170px; object-fit:cover; display:block; }
+  .mini-badge .mb-info{ padding:8px 10px; text-align:left; }
+  .mini-badge .mb-name{ font-size:12.5px; font-weight:700; }
+  .mini-badge .mb-khoa{ font-size:10.5px; color:var(--ink-soft); }
+
+  /* ===== Progress toggle & modal ===== */
+  .progress-fab{
+    position:fixed; right:16px; bottom:18px; z-index:20;
+    background:var(--teal-700); color:#fff; border:none;
+    border-radius:999px; padding:12px 18px; font-weight:700; font-size:13.5px;
+    box-shadow:0 8px 20px rgba(11,61,58,.28); display:flex; align-items:center; gap:8px;
+    cursor:pointer;
+  }
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(11,20,18,.45);
+    display:none; align-items:flex-end; justify-content:center; z-index:30;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-sheet{
+    background:#fff; width:100%; max-width:560px;
+    border-radius:20px 20px 0 0; max-height:82vh; overflow-y:auto;
+    padding:18px 18px 26px;
+  }
+  .modal-handle{ width:36px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px; }
+  .modal-title-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-right:34px; }
+  .modal-title{ font-size:17px; font-weight:800; margin:0 0 2px; }
+  .export-btn{
+    flex-shrink:0; background:var(--mint-100); color:var(--teal-700); border:1.5px solid var(--mint-200);
+    border-radius:10px; padding:8px 12px; font-size:12.5px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .overall-bar{
+    background:var(--mint-100); border-radius:999px; height:10px; overflow:hidden; margin:12px 0 4px;
+  }
+  .overall-bar-fill{ height:100%; background:var(--teal-500); border-radius:999px; }
+  .overall-txt{ font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; }
+  .khoa-row{ margin-bottom:14px; }
+  .khoa-row-head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13.5px; font-weight:700; margin-bottom:6px;
+  }
+  .khoa-row-head span.cnt{ font-weight:600; color:var(--ink-soft); }
+  .mini-bar{ background:var(--mint-100); border-radius:999px; height:7px; overflow:hidden; }
+  .mini-bar-fill{ height:100%; background:var(--teal-500); }
+  .close-modal{
+    position:absolute; top:16px; right:16px; background:var(--mint-100);
+    border:none; width:30px; height:30px; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; color:var(--teal-700);
+  }
+
+  .loading-wrap{ text-align:center; padding:50px 20px; color:var(--ink-soft); font-size:14px; }
+  .spinner{
+    width:28px; height:28px; border-radius:50%;
+    border:3px solid var(--mint-200); border-top-color:var(--teal-600);
+    animation:spin .8s linear infinite; margin:0 auto 14px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:13.5px; font-weight:600; opacity:0; transition:opacity .2s, transform .2s;
+    z-index:50; pointer-events:none; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error{ background:var(--red); }
+
+  .empty-hint{ text-align:center; color:var(--ink-soft); font-size:13.5px; padding:20px 0; }
+</style>
+</head>
+<body>
+
+  <div class="badge-header">
+    <div class="badge-hole"></div>
+    <p class="badge-eyebrow">Trạm Y tế Phường Linh Xuân</p>
+    <h1 class="badge-title">Tải ảnh làm thẻ nhân viên</h1>
+    <p class="badge-sub">Chọn khoa/phòng → chọn tên → gửi ảnh. Ảnh sẽ được lưu và đặt tên theo đúng khoa/phòng &amp; họ tên.</p>
+    <div class="stepper" id="stepper"></div>
+    <div class="mini-stat" id="miniStat" style="display:none"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" id="mainCard">
+      <div class="loading-wrap" id="loadingWrap">
+        <div class="spinner"></div>
+        Đang tải danh sách nhân sự...
+      </div>
+    </div>
+  </div>
+
+  <button class="progress-fab" id="progressFab" style="display:none" onclick="openProgress()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19V5M10 19V9M16 19V13M22 19H2" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
+    Tiến độ
+  </button>
+
+  <div class="modal-overlay" id="progressModal">
+    <div class="modal-sheet">
+      <button class="close-modal" onclick="closeProgress()">✕</button>
+      <div class="modal-handle"></div>
+      <div class="modal-title-row">
+        <p class="modal-title">Tiến độ tải ảnh</p>
+        <button class="export-btn" onclick="onExportClick()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#0f5e59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Xuất Excel
+        </button>
+      </div>
+      <div id="progressBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ================== CẤU HÌNH ==================
+   Dán URL Web App (Apps Script) sau khi Deploy vào đây. Dạng:
+   https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+*/
+var CFG = {
+  API: 'https://script.google.com/macros/s/AKfycbx95yarx4PfGVk4hjkpltyQ3KLUM0ESeK2eu3qXOApa077_p6snEw-vO84jyVwQietT8w/exec'
+};
+
+// Mã để được xuất Excel. LƯU Ý: đây chỉ là "che" đơn giản để người ngoài không tiện bấm xuất,
+// KHÔNG phải bảo mật thật — trang này chạy trên GitHub Pages công khai nên ai xem mã nguồn
+// (View Source) đều đọc được chuỗi này. Không dùng cách này để bảo vệ dữ liệu nhạy cảm thật sự.
+var EXPORT_CODE = 'anhbodoi21';
+
+var STATE = {
+  danhSach: [],       // toàn bộ danh sách + trạng thái, lấy từ server
+  khoaList: [],        // danh sách khoa duy nhất, theo thứ tự xuất hiện
+  step: 1,              // 1: chọn khoa, 2: chọn tên, 3: chọn ảnh, 4: thành công
+  selectedKhoa: null,
+  selectedNguoi: null,  // object từ danhSach
+  photoBase64: null,    // base64 KHÔNG có tiền tố data:
+  photoMime: 'image/jpeg',
+  photoPreviewUrl: null
+};
+
+var mainCard = document.getElementById('mainCard');
+var loadingWrap = document.getElementById('loadingWrap');
+
+// ================== TẢI DANH SÁCH ==================
+function loadDanhSach() {
+  fetch(CFG.API + '?action=getDanhSach')
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (res.status !== 'ok') throw new Error(res.message || 'Lỗi không xác định');
+      STATE.danhSach = res.data;
+      var seen = {};
+      STATE.khoaList = [];
+      res.data.forEach(function (d) {
+        if (!seen[d.khoa]) { seen[d.khoa] = true; STATE.khoaList.push(d.khoa); }
+      });
+      document.getElementById('progressFab').style.display = 'flex';
+      updateMiniStat();
+      renderStep();
+    })
+    .catch(function (err) {
+      mainCard.innerHTML =
+        '<div class="empty-hint">Không tải được danh sách.<br>' +
+        'Kiểm tra lại URL API trong file index.html (CFG.API) và đảm bảo Apps Script đã Deploy.<br><br>' +
+        '<span style="color:var(--red)">' + escapeHtml(String(err.message || err)) + '</span></div>';
+    });
+}
+
+// ================== STEPPER ==================
+function updateMiniStat() {
+  var total = STATE.danhSach.length;
+  var done = STATE.danhSach.filter(function (d) { return d.trangThai === 'Đã tải'; }).length;
+  var el = document.getElementById('miniStat');
+  el.style.display = 'flex';
+  el.innerHTML =
+    '<span class="pill up"><span class="dot"></span>Đã tải: ' + done + '</span>' +
+    '<span class="pill left"><span class="dot"></span>Còn thiếu: ' + (total - done) + '</span>';
+}
+
+function renderStepper() {
+  var labels = ['Khoa/Phòng', 'Họ tên', 'Ảnh'];
+  var html = '';
+  for (var i = 1; i <= 3; i++) {
+    var cls = i < STATE.step ? 'done' : (i === STATE.step ? 'active' : '');
+    html += '<div class="step-dot ' + cls + '">' + (i < STATE.step ? '✓' : i) + '</div>';
+    if (i < 3) html += '<div class="step-line ' + (i < STATE.step ? 'done' : '') + '"></div>';
+  }
+  document.getElementById('stepper').innerHTML = html;
+}
+
+function renderStep() {
+  renderStepper();
+  if (STATE.step === 1) return renderStepKhoa();
+  if (STATE.step === 2) return renderStepNguoi();
+  if (STATE.step === 3) return renderStepAnh();
+  if (STATE.step === 4) return renderStepSuccess();
+}
+
+// ================== BƯỚC 1: CHỌN KHOA ==================
+function renderStepKhoa() {
+  var html = '<h2 class="section-title">Chọn khoa/phòng</h2>';
+  html += '<p class="section-hint">Chọn đúng khoa/phòng bạn đang công tác.</p>';
+  html += '<div class="opt-list">';
+  STATE.khoaList.forEach(function (khoa) {
+    var list = STATE.danhSach.filter(function (d) { return d.khoa === khoa; });
+    var done = list.filter(function (d) { return d.trangThai === 'Đã tải'; }).length;
+    html += '<button class="opt-btn" onclick="selectKhoa(' + attrIdx(khoa) + ')">' +
+      '<div class="opt-main"><span class="opt-name">' + escapeHtml(khoa) + '</span>' +
+      '<span class="opt-sub">' + list.length + ' người</span></div>' +
+      '<span class="opt-count">' + done + '/' + list.length + '</span>' +
+      '</button>';
+  });
+  html += '</div>';
+  mainCard.innerHTML = html;
+}
+
+// lưu khoa vào mảng tạm để tránh lỗi escape khi truyền qua onclick
+var _khoaRefs = [];
+function attrIdx(khoa) {
+  var idx = _khoaRefs.indexOf(khoa);
+  if (idx === -1) { _khoaRefs.push(khoa); idx = _khoaRefs.length - 1; }
+  return idx;
+}
+function selectKhoa(idx) {
+  STATE.selectedKhoa = _khoaRefs[idx];
+  STATE.step = 2;
+  renderStep();
+}
+
+// ================== BƯỚC 2: CHỌN TÊN ==================
+function renderStepNguoi() {
+  var list = STATE.danhSach.filter(function (d) { return d.khoa === STATE.selectedKhoa; });
+  var html = '<div class="back-row" onclick="backTo(1)">‹ Đổi khoa/phòng</div>';
+  html += '<h2 class="section-title">' + escapeHtml(STATE.selectedKhoa) + '</h2>';
+  html += '<p class="section-hint">Tìm và chọn đúng tên của bạn trong danh sách.</p>';
+  html += '<div class="search-box">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#5b6f6b" stroke-width="2"/><path d="M21 21L16.65 16.65" stroke="#5b6f6b" stroke-width="2" stroke-linecap="round"/></svg>' +
+    '<input id="searchInput" placeholder="Gõ tên để tìm..." oninput="filterNguoi()">' +
+    '</div>';
+  html += '<div class="opt-list" id="nguoiList"></div>';
+  mainCard.innerHTML = html;
+  renderNguoiList(list);
+}
+
+function renderNguoiList(list) {
+  var box = document.getElementById('nguoiList');
+  if (!list.length) { box.innerHTML = '<div class="empty-hint">Không tìm thấy tên phù hợp.</div>'; return; }
+  var html = '';
+  list.forEach(function (d) {
+    var uploaded = d.trangThai === 'Đã tải';
+    html += '<button class="opt-btn" onclick="selectNguoi(' + d.stt + ')">' +
+      '<div class="opt-main"><span class="opt-name">' + escapeHtml(d.hoTen) + '</span>' +
+      '<span class="opt-sub">' + escapeHtml(d.chucVu || '') + '</span></div>' +
+      '<span class="opt-badge ' + (uploaded ? 'uploaded' : 'pending') + '">' +
+      (uploaded ? 'Đã có ảnh' : 'Chưa có') + '</span>' +
+      '</button>';
+  });
+  box.innerHTML = html;
+}
+
+function filterNguoi() {
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  var list = STATE.danhSach.filter(function (d) {
+    return d.khoa === STATE.selectedKhoa &&
+      (!q || d.hoTen.toLowerCase().indexOf(q) > -1);
+  });
+  renderNguoiList(list);
+}
+
+function selectNguoi(stt) {
+  STATE.selectedNguoi = STATE.danhSach.find(function (d) { return d.stt === stt; });
+  STATE.photoBase64 = null;
+  STATE.photoPreviewUrl = null;
+  STATE.step = 3;
+  renderStep();
+}
+
+function backTo(step) {
+  STATE.step = step;
+  renderStep();
+}
+
+// ================== BƯỚC 3: CHỌN / CHỤP ẢNH ==================
+function renderStepAnh() {
+  var p = STATE.selectedNguoi;
+  var html = '<div class="back-row" onclick="backTo(2)">‹ Đổi người</div>';
+  html += '<div class="selected-person">' +
+    '<div><div class="nm">' + escapeHtml(p.hoTen) + '</div>' +
+    '<div class="kh">' + escapeHtml(p.khoa) + '</div></div>' +
+    '<span class="change-link" onclick="backTo(2)">Đổi</span>' +
+    '</div>';
+
+  if (p.trangThai === 'Đã tải') {
+    html += '<div class="warn-box">Người này đã có ảnh (tải lúc ' + escapeHtml(p.thoiGian || '') +
+      '). Nếu tải ảnh mới, ảnh cũ sẽ bị THAY THẾ.</div>';
+  }
+
+  html += '<div class="photo-zone" style="margin-top:16px">';
+  html += '<div class="photo-frame" id="photoFrame">';
+  if (STATE.photoPreviewUrl) {
+    html += '<img src="' + STATE.photoPreviewUrl + '">';
+  } else {
+    html += '<svg class="ph-icon" width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M4 8a2 2 0 012-2h1.2a1 1 0 00.86-.5l.6-1A2 2 0 0110.4 3.5h3.2a2 2 0 011.74 1l.6 1a1 1 0 00.86.5H18a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#0f5e59" stroke-width="1.6"/><circle cx="12" cy="13" r="3.4" stroke="#0f5e59" stroke-width="1.6"/></svg>';
+  }
+  html += '</div>';
+
+  html += '<input type="file" id="fileInput" accept="image/*" capture="environment" onchange="onFileChosen(event)">';
+  html += '<div class="photo-actions">';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'fileInput\').click()">Chụp / chọn ảnh</button>';
+  html += '</div>';
+
+  html += '<button class="btn btn-primary btn-block" id="confirmBtn" ' +
+    (STATE.photoBase64 ? '' : 'disabled') + ' onclick="confirmUpload()">Xác nhận gửi ảnh</button>';
+  html += '</div>';
+
+  mainCard.innerHTML = html;
+}
+
+function onFileChosen(evt) {
+  var file = evt.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Vui lòng chọn file ảnh.', true); return; }
+
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var img = new Image();
+    img.onload = function () {
+      var MAX = 1100;
+      var w = img.width, h = img.height;
+      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      else if (h >= w && h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      STATE.photoBase64 = dataUrl.split(',')[1];
+      STATE.photoMime = 'image/jpeg';
+      STATE.photoPreviewUrl = dataUrl;
+      renderStepAnh();
+    };
+    img.onerror = function () { showToast('Không đọc được ảnh, thử ảnh khác.', true); };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function confirmUpload() {
+  if (!STATE.photoBase64) return;
+  var btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+
+  fetch(CFG.API, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'uploadAnh',
+      stt: STATE.selectedNguoi.stt,
+      base64Data: STATE.photoBase64,
+      mimeType: STATE.photoMime
+    })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (res.status !== 'ok') throw new Error(res.message || 'Lỗi không xác định');
+      // cập nhật state cục bộ
+      STATE.selectedNguoi.trangThai = 'Đã tải';
+      STATE.selectedNguoi.linkAnh = res.link;
+      STATE.selectedNguoi.thoiGian = new Date().toLocaleString('vi-VN');
+      STATE.step = 4;
+      updateMiniStat();
+      renderStep();
+    })
+    .catch(function (err) {
+      showToast('Gửi ảnh thất bại: ' + (err.message || err), true);
+      btn.disabled = false;
+      btn.textContent = 'Xác nhận gửi ảnh';
+    });
+}
+
+// ================== BƯỚC 4: THÀNH CÔNG ==================
+function renderStepSuccess() {
+  var p = STATE.selectedNguoi;
+  var html = '<div class="success-wrap">';
+  html += '<div class="success-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#0f5e59" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+  html += '<h3>Đã gửi ảnh thành công!</h3>';
+  html += '<p>Cảm ơn bạn. Ảnh sẽ được dùng để in thẻ nhân viên.</p>';
+  html += '<div class="mini-badge">' +
+    '<img src="' + STATE.photoPreviewUrl + '">' +
+    '<div class="mb-info"><div class="mb-name">' + escapeHtml(p.hoTen) + '</div>' +
+    '<div class="mb-khoa">' + escapeHtml(p.khoa) + '</div></div>' +
+    '</div>';
+  html += '<button class="btn btn-primary btn-block" onclick="backTo(2)">Chọn người khác trong khoa</button>';
+  html += '<button class="btn btn-ghost btn-block" style="margin-top:6px" onclick="backTo(1)">Đổi khoa/phòng khác</button>';
+  html += '</div>';
+  mainCard.innerHTML = html;
+}
+
+// ================== TIẾN ĐỘ (MODAL) ==================
+function openProgress() {
+  renderProgress();
+  document.getElementById('progressModal').classList.add('open');
+}
+function closeProgress() {
+  document.getElementById('progressModal').classList.remove('open');
+}
+function renderProgress() {
+  var total = STATE.danhSach.length;
+  var done = STATE.danhSach.filter(function (d) { return d.trangThai === 'Đã tải'; }).length;
+  var pct = total ? Math.round(done / total * 100) : 0;
+
+  var html = '<div class="overall-bar"><div class="overall-bar-fill" style="width:' + pct + '%"></div></div>';
+  html += '<div class="overall-txt">Toàn trạm: ' + done + '/' + total + ' người đã có ảnh (' + pct + '%)</div>';
+
+  STATE.khoaList.forEach(function (khoa) {
+    var list = STATE.danhSach.filter(function (d) { return d.khoa === khoa; });
+    var kDone = list.filter(function (d) { return d.trangThai === 'Đã tải'; }).length;
+    var kPct = list.length ? Math.round(kDone / list.length * 100) : 0;
+    html += '<div class="khoa-row">' +
+      '<div class="khoa-row-head"><span>' + escapeHtml(khoa) + '</span><span class="cnt">' + kDone + '/' + list.length + '</span></div>' +
+      '<div class="mini-bar"><div class="mini-bar-fill" style="width:' + kPct + '%"></div></div>' +
+      '</div>';
+  });
+
+  var missing = STATE.danhSach.filter(function (d) { return d.trangThai !== 'Đã tải'; });
+  if (missing.length) {
+    html += '<p style="font-size:13px;font-weight:700;margin:18px 0 8px;color:var(--red)">Còn thiếu ảnh (' + missing.length + ')</p>';
+    html += '<div class="opt-list">';
+    missing.forEach(function (d) {
+      html += '<div class="opt-btn" style="cursor:default">' +
+        '<div class="opt-main"><span class="opt-name">' + escapeHtml(d.hoTen) + '</span>' +
+        '<span class="opt-sub">' + escapeHtml(d.khoa) + '</span></div>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('progressBody').innerHTML = html;
+}
+
+// ================== XUẤT EXCEL (có mã bảo vệ) ==================
+function onExportClick() {
+  var pass = window.prompt('Nhập mã để xuất Excel:');
+  if (pass === null) return; // bấm Cancel
+  if (pass.trim() !== EXPORT_CODE) {
+    showToast('Mã không đúng, không thể xuất.', true);
+    return;
+  }
+  exportExcel();
+}
+
+function exportExcel() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Chưa tải được thư viện xuất Excel, kiểm tra kết nối mạng.', true);
+    return;
+  }
+  var header = ['STT', 'Họ và tên', 'Chức vụ', 'Khoa/Phòng', 'Trạng thái', 'Thời gian tải', 'Link ảnh'];
+  var rows = STATE.danhSach
+    .slice()
+    .sort(function (a, b) {
+      if (a.khoa === b.khoa) return a.stt - b.stt;
+      return a.khoa < b.khoa ? -1 : 1;
+    })
+    .map(function (d) {
+      return [d.stt, d.hoTen, d.chucVu || '', d.khoa, d.trangThai || 'Chưa tải', d.thoiGian || '', d.linkAnh || ''];
+    });
+
+  var aoa = [header].concat(rows);
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 5 }, { wch: 24 }, { wch: 22 }, { wch: 34 }, { wch: 12 }, { wch: 16 }, { wch: 40 }];
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DanhSach');
+
+  var d = new Date();
+  var stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  XLSX.writeFile(wb, 'DanhSach_AnhThe_TYTLinhXuan_' + stamp + '.xlsx');
+  showToast('Đã xuất file Excel.');
+}
+
+// ================== TIỆN ÍCH ==================
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+var toastTimer = null;
+function showToast(msg, isError) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.className = 'toast'; }, 3200);
+}
+
+loadDanhSach();
+</script>
+</body>
+</html>
