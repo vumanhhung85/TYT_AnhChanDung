@@ -152,11 +152,15 @@
   .opt-count{ font-size:12.5px; color:var(--teal-700); font-weight:700; }
   .opt-arrow{ opacity:.35; flex-shrink:0; }
 
-  .back-row{
-    display:flex; align-items:center; gap:8px; margin-bottom:14px;
-    color:var(--teal-700); font-weight:600; font-size:14px; cursor:pointer;
-    width:fit-content;
+  .back-btn{
+    display:inline-flex; align-items:center; gap:7px; margin-bottom:16px;
+    background:var(--mint-100); border:1.5px solid var(--mint-200); color:var(--teal-700);
+    font-weight:700; font-size:14px; cursor:pointer;
+    border-radius:999px; padding:9px 16px 9px 12px;
+    min-height:38px;
   }
+  .back-btn:active{ background:var(--mint-200); }
+  .back-btn svg{ flex-shrink:0; }
 
   /* ===== Ảnh ===== */
   .photo-zone{
@@ -436,10 +440,17 @@ function selectKhoa(idx) {
   renderStep();
 }
 
+// Nút "Quay lại" dùng chung cho các bước - to, rõ, có icon mũi tên, dễ bấm trên điện thoại.
+function backButtonHtml(label, targetStep) {
+  return '<button class="back-btn" onclick="backTo(' + targetStep + ')">' +
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#0f5e59" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+    escapeHtml(label) + '</button>';
+}
+
 // ================== BƯỚC 2: CHỌN TÊN ==================
 function renderStepNguoi() {
   var list = STATE.danhSach.filter(function (d) { return d.khoa === STATE.selectedKhoa; });
-  var html = '<div class="back-row" onclick="backTo(1)">‹ Đổi khoa/phòng</div>';
+  var html = backButtonHtml('Quay lại - Đổi khoa/phòng', 1);
   html += '<h2 class="section-title">' + escapeHtml(STATE.selectedKhoa) + '</h2>';
   html += '<p class="section-hint">Tìm và chọn đúng tên của bạn trong danh sách.</p>';
   html += '<div class="search-box">' +
@@ -492,7 +503,7 @@ function backTo(step) {
 // ================== BƯỚC 3: CHỌN / CHỤP ẢNH ==================
 function renderStepAnh() {
   var p = STATE.selectedNguoi;
-  var html = '<div class="back-row" onclick="backTo(2)">‹ Đổi người</div>';
+  var html = backButtonHtml('Quay lại - Đổi người', 2);
   html += '<div class="selected-person">' +
     '<div><div class="nm">' + escapeHtml(p.hoTen) + '</div>' +
     '<div class="kh">' + escapeHtml(p.khoa) + '</div></div>' +
