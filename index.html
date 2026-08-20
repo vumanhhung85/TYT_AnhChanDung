@@ -524,9 +524,15 @@ function renderStepAnh() {
   }
   html += '</div>';
 
-  html += '<input type="file" id="fileInput" accept="image/*" capture="environment" onchange="onFileChosen(event)">';
+  html += '<input type="file" id="fileInputCamera" accept="image/*" capture="environment" onchange="onFileChosen(event)">';
+  html += '<input type="file" id="fileInputLibrary" accept="image/*" onchange="onFileChosen(event)">';
   html += '<div class="photo-actions">';
-  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'fileInput\').click()">Chụp / chọn ảnh</button>';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'fileInputCamera\').click()">' +
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 8a2 2 0 012-2h1.2a1 1 0 00.86-.5l.6-1A2 2 0 0110.4 3.5h3.2a2 2 0 011.74 1l.6 1a1 1 0 00.86.5H18a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" stroke="#0f5e59" stroke-width="1.7"/><circle cx="12" cy="13" r="3.2" stroke="#0f5e59" stroke-width="1.7"/></svg>' +
+    'Chụp ảnh</button>';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'fileInputLibrary\').click()">' +
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2" stroke="#0f5e59" stroke-width="1.7"/><circle cx="8.5" cy="9.5" r="1.6" stroke="#0f5e59" stroke-width="1.5"/><path d="M4 16.5l5-4.5 3 2.6 3.5-3.6 4.5 5" stroke="#0f5e59" stroke-width="1.7" stroke-linejoin="round"/></svg>' +
+    'Thư viện ảnh</button>';
   html += '</div>';
 
   html += '<button class="btn btn-primary btn-block" id="confirmBtn" ' +
